@@ -1,22 +1,22 @@
 # Declarative hibernation
 
-CloudNativePG is designed to keep PostgreSQL cluster up, running and available
+CloudNativePG is designed to keep PostgreSQL clusters up, running and available
 anytime.
 
-There are some kind of workloads that require the database to be up only when
-the workload is active. Batch-driven solution are one of that kind.
+There are some kinds of workloads that require the database to be up only when
+the workload is active. Batch-driven solutions are one such case.
 
-In that scenario, the database need only to be up when the batch procedure is
-running.
+In batch-driven solutions, the database needs to be up only when the batch
+process is running.
 
 The declarative hibernation feature enables saving CPU power by removing the
-database Pods while keeping the data PVCs.
+database Pods, while keeping the data PVCs.
 
 ## Hibernation
 
 To hibernate a cluster, set the `cnpg.io/hibernation=on` annotation:
 
-```
+``` sh
 $ kubectl annotate cluster <cluster-name> --overwrite cnpg.io/hibernation=on
 ```
 
@@ -29,7 +29,7 @@ This procedure allows the replicas to be kept in sync.
 The hibernation status can be monitored by looking for the `cnpg.io/hibernation`
 condition:
 
-```
+``` sh
 $ kubectl get cluster <cluster-name> -o "jsonpath={.status.conditions[?(.type==\"cnpg.io/hibernation\")]}" 
 
 {
@@ -41,10 +41,11 @@ $ kubectl get cluster <cluster-name> -o "jsonpath={.status.conditions[?(.type==\
 }
 ```
 
-Or the `status` command of the the kubectl-cnp plugin:
+The hibernation status can also be read with the `status` sub-command of the the
+kubectl-cnp plugin:
 
-```
-$ kubectl-cnpg status <cluster-name>
+``` sh
+$ kubectl cnpg status <cluster-name>
 Cluster Summary
 Name:              cluster-example
 Namespace:         default
@@ -69,4 +70,4 @@ To rehydrate a cluster, set the `cnpg.io/hibernation=off` annotation:
 $ kubectl annotate cluster <cluster-name> --overwrite cnpg.io/hibernation=off
 ```
 
-The Pods will be recreated and the cluster operation will be resumed.
+The Pods will be recreated and the cluster will resume operation.
