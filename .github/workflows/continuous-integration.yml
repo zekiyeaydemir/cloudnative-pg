@@ -14,12 +14,6 @@ on:
   schedule:
     - cron:  '0 1 * * *'
 
-# set up environment variables to be used across all the jobs
-env:
-  GOLANG_VERSION: "1.20.x"
-  GOLANGCI_LINT_VERSION: "v1.53"
-  KUBEBUILDER_VERSION: "2.3.1"
-
 defaults:
   run:
     # default failure handling for shell scripts in 'run' steps
@@ -62,6 +56,14 @@ jobs:
           skip_after_successful_duplicate: 'true'
           paths_ignore: '["README.md", "docs/**"]'
           do_not_skip: '["pull_request", "workflow_dispatch", "schedule"]'
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - id: load_envs
+        run: |
+          ls .github/
+          cat .github/variables.env >> $GITHUB_ENV
 
   # Classify codebase changes along 5 different dimensions based on the files
   # changed in the commit/PR, and create 5 different filters which are used in
@@ -129,6 +131,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - id: load_envs
+        run: |
+          ls .github/
+          cat .github/variables.env >> $GITHUB_ENV
 
       - name: Install Go
         uses: actions/setup-go@v4
@@ -225,7 +232,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
+      - id: load_envs
+        run: |
+          ls .github/
+          cat .github/variables.env >> $GITHUB_ENV
       - name: Install Go
         uses: actions/setup-go@v4
         with:
@@ -263,7 +273,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
+      - id: load_envs
+        run: |
+          ls .github/
+          cat .github/variables.env >> $GITHUB_ENV
       - name: Install Go
         uses: actions/setup-go@v4
         with:
@@ -294,7 +307,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
+      - id: load_envs
+        run: |
+          ls .github/
+          cat .github/variables.env >> $GITHUB_ENV
       - name: Install Go
         uses: actions/setup-go@v4
         with:
@@ -352,7 +368,10 @@ jobs:
         with:
           # To identify the commit we need the history and all the tags.
           fetch-depth: 0
-
+      - id: load_envs
+        run: |
+          ls .github/
+          cat .github/variables.env >> $GITHUB_ENV
       - name: Install Go
         uses: actions/setup-go@v4
         with:
