@@ -46,6 +46,7 @@ import (
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/configfile"
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/fileutils"
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/barman/archiver"
+	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/external"
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/log"
 	postgresManagement "github.com/cloudnative-pg/cloudnative-pg/pkg/management/postgres"
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/management/postgres/constants"
@@ -223,6 +224,9 @@ func (r *InstanceReconciler) Reconcile(
 		return reconcile.Result{}, fmt.Errorf("while updating database owner password: %w", err)
 	}
 
+	if err = r.ReconcileExternalClusters(ctx, cluster); err != nil {
+		return reconcile.Result{}, fmt.Errorf("can not configure external clusters: %w", err)
+	}
 	if err := r.reconcileDatabases(ctx, cluster); err != nil {
 		return reconcile.Result{}, fmt.Errorf("cannot reconcile database configurations: %w", err)
 	}
@@ -1267,4 +1271,24 @@ func (r *InstanceReconciler) shouldRequeueForMissingTopology(cluster *apiv1.Clus
 	}
 
 	return false
+}
+
+// ReconcileExternalClusters generate the pgpass file for each external defined external clusters
+func (r *InstanceReconciler) ReconcileExternalClusters(ctx context.Context, cluster *apiv1.Cluster) error {
+	if isPrimary, _ := r.instance.IsPrimary(); !isPrimary {
+		return nil
+	}
+	contextLogger := log.FromContext(ctx)
+	for _, server := range cluster.Spec.ExternalClusters {
+		externalServer := server
+		if externalServer.Password != nil {
+			_, _, err := external.ConfigureConnectionToServer(
+				ctx, r.client, r.instance.Namespace, &externalServer)
+			if err != nil {
+				contextLogger.Error(err, "Generate password file for", "external cluster", externalServer.Name)
+				return err
+			}
+		}
+	}
+	return nil
 }
