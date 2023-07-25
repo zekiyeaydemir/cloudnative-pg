@@ -87,14 +87,14 @@ func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		// This also happens when you delete a Backup resource in k8s.
 		// If that's the case, we have nothing to do
 		if apierrs.IsNotFound(err) {
-			return ctrl.Result{}, nil
+			return ctrl.Result{}, fmt.Errorf("boom A: %v", req.NamespacedName)
 		}
 		return ctrl.Result{}, err
 	}
 
 	if len(backup.Status.Phase) != 0 && backup.Status.Phase != apiv1.BackupPhasePending {
 		// Nothing to do here
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, fmt.Errorf("boom B: status is non-pending")
 	}
 
 	clusterName := backup.Spec.Cluster.Name
@@ -112,7 +112,7 @@ func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		tryFlagBackupAsFailed(ctx, r.Client, &backup, fmt.Errorf("while getting cluster %s: %w", clusterName, err))
 		r.Recorder.Eventf(&backup, "Warning", "FindingCluster",
 			"Error getting cluster %v, will not retry: %s", clusterName, err.Error())
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, fmt.Errorf("boom C: %v", err.Error())
 	}
 
 	if cluster.Spec.Backup == nil {
@@ -122,7 +122,7 @@ func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		contextLogger.Warning(message)
 		r.Recorder.Event(&backup, "Warning", "ClusterHasNoBackupConfig", message)
 		tryFlagBackupAsFailed(ctx, r.Client, &backup, errors.New(message))
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, fmt.Errorf("boom D " + message)
 	}
 
 	contextLogger.Debug("Found cluster for backup", "cluster", clusterName)
@@ -143,7 +143,7 @@ func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		tryFlagBackupAsFailed(ctx, r.Client, &backup, fmt.Errorf("while getting pod: %w", err))
 		r.Recorder.Eventf(&backup, "Warning", "FindingPod", "Error getting target pod: %s",
 			cluster.Status.TargetPrimary)
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, fmt.Errorf("boom E: %v", "error finding pod "+err.Error())
 	}
 	contextLogger.Debug("Found pod for backup", "pod", pod.Name)
 
@@ -178,7 +178,7 @@ func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 				"started at", backup.Status.StartedAt)
 
 			// Nothing to do here
-			return ctrl.Result{}, nil
+			return ctrl.Result{}, fmt.Errorf("boom F: %v", "backup already running")
 		}
 		// We need to restart the backup as the previously selected instance doesn't look healthy
 		r.Recorder.Eventf(&backup, "Normal", "ReStarting",
@@ -196,7 +196,7 @@ func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	if err := StartBackup(ctx, r.Client, &backup, pod, &cluster); err != nil {
 		r.Recorder.Eventf(&backup, "Warning", "Error", "Backup exit with error %v", err)
 		tryFlagBackupAsFailed(ctx, r.Client, &backup, fmt.Errorf("encountered an error while taking the backup: %w", err))
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, fmt.Errorf("boom G: %v", "error starting backup "+err.Error())
 	}
 
 	contextLogger.Debug(fmt.Sprintf("object %#q has been reconciled", req.NamespacedName))
