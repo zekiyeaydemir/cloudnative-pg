@@ -342,6 +342,14 @@ documentation</p>
    <p>VolumeSnapshot provides the configuration for the execution of volume snapshot backups.</p>
 </td>
 </tr>
+<tr><td><code>volumeGroupSnapshot</code><br/>
+<a href="#postgresql-cnpg-io-v1-VolumeGroupSnapshotConfiguration"><i>VolumeGroupSnapshotConfiguration</i></a>
+</td>
+<td>
+   <p>VolumeSnapshot provides the configuration for the execution of volume group snapshot
+backups.</p>
+</td>
+</tr>
 <tr><td><code>barmanObjectStore</code><br/>
 <a href="#postgresql-cnpg-io-v1-BarmanObjectStoreConfiguration"><i>BarmanObjectStoreConfiguration</i></a>
 </td>
@@ -2975,7 +2983,7 @@ up again) or not (recreate it elsewhere - when <code>instances</code> &gt;1)</p>
 
 - [ScheduledBackupSpec](#postgresql-cnpg-io-v1-ScheduledBackupSpec)
 
-- [VolumeSnapshotConfiguration](#postgresql-cnpg-io-v1-VolumeSnapshotConfiguration)
+- [VolumeSnapshotCommonConfiguration](#postgresql-cnpg-io-v1-VolumeSnapshotCommonConfiguration)
 
 
 <p>OnlineConfiguration contains the configuration parameters for the online volume snapshot</p>
@@ -4315,7 +4323,7 @@ service account</p>
 
 **Appears in:**
 
-- [VolumeSnapshotConfiguration](#postgresql-cnpg-io-v1-VolumeSnapshotConfiguration)
+- [VolumeSnapshotCommonConfiguration](#postgresql-cnpg-io-v1-VolumeSnapshotCommonConfiguration)
 
 
 <p>SnapshotOwnerReference defines the reference type for the owner of the snapshot.
@@ -4566,7 +4574,7 @@ in synchronous replica election in case of failures</p>
 </tbody>
 </table>
 
-## VolumeSnapshotConfiguration     {#postgresql-cnpg-io-v1-VolumeSnapshotConfiguration}
+## VolumeGroupSnapshotConfiguration     {#postgresql-cnpg-io-v1-VolumeGroupSnapshotConfiguration}
 
 
 **Appears in:**
@@ -4574,7 +4582,41 @@ in synchronous replica election in case of failures</p>
 - [BackupConfiguration](#postgresql-cnpg-io-v1-BackupConfiguration)
 
 
-<p>VolumeSnapshotConfiguration represents the configuration for the execution of snapshot backups.</p>
+<p>VolumeGroupSnapshotConfiguration represents the configuration for the execution of group snapshot backups.</p>
+
+
+<table class="table">
+<thead><tr><th width="30%">Field</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>VolumeSnapshotCommonConfiguration</code><br/>
+<a href="#postgresql-cnpg-io-v1-VolumeSnapshotCommonConfiguration"><i>VolumeSnapshotCommonConfiguration</i></a>
+</td>
+<td>(Members of <code>VolumeSnapshotCommonConfiguration</code> are embedded into this type.)
+   <span class="text-muted">No description provided.</span></td>
+</tr>
+<tr><td><code>className</code><br/>
+<i>string</i>
+</td>
+<td>
+   <p>ClassName specifies the VolumeGroupSnapshotClass to be used for PG_DATA PersistentVolumeClaim.
+It is the default class for the other types if no specific class is present</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## VolumeSnapshotCommonConfiguration     {#postgresql-cnpg-io-v1-VolumeSnapshotCommonConfiguration}
+
+
+**Appears in:**
+
+- [VolumeGroupSnapshotConfiguration](#postgresql-cnpg-io-v1-VolumeGroupSnapshotConfiguration)
+
+- [VolumeSnapshotConfiguration](#postgresql-cnpg-io-v1-VolumeSnapshotConfiguration)
+
+
+<p>VolumeSnapshotCommonConfiguration represent the configuration attributes that are common
+to every volume snapshots based backup</p>
 
 
 <table class="table">
@@ -4592,29 +4634,6 @@ in synchronous replica election in case of failures</p>
 </td>
 <td>
    <p>Annotations key-value pairs that will be added to .metadata.annotations snapshot resources.</p>
-</td>
-</tr>
-<tr><td><code>className</code><br/>
-<i>string</i>
-</td>
-<td>
-   <p>ClassName specifies the Snapshot Class to be used for PG_DATA PersistentVolumeClaim.
-It is the default class for the other types if no specific class is present</p>
-</td>
-</tr>
-<tr><td><code>walClassName</code><br/>
-<i>string</i>
-</td>
-<td>
-   <p>WalClassName specifies the Snapshot Class to be used for the PG_WAL PersistentVolumeClaim.</p>
-</td>
-</tr>
-<tr><td><code>tablespaceClassName</code><br/>
-<i>map[string]string</i>
-</td>
-<td>
-   <p>TablespaceClassName specifies the Snapshot Class to be used for the tablespaces.
-defaults to the PGDATA Snapshot Class, if set</p>
 </td>
 </tr>
 <tr><td><code>snapshotOwnerReference</code><br/>
@@ -4637,6 +4656,54 @@ online/hot (<code>true</code>, default) or offline/cold (<code>false</code>)</p>
 </td>
 <td>
    <p>Configuration parameters to control the online/hot backup with volume snapshots</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## VolumeSnapshotConfiguration     {#postgresql-cnpg-io-v1-VolumeSnapshotConfiguration}
+
+
+**Appears in:**
+
+- [BackupConfiguration](#postgresql-cnpg-io-v1-BackupConfiguration)
+
+
+<p>VolumeSnapshotConfiguration represents the configuration for the execution of snapshot backups.</p>
+
+
+<table class="table">
+<thead><tr><th width="30%">Field</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>VolumeSnapshotCommonConfiguration</code><br/>
+<a href="#postgresql-cnpg-io-v1-VolumeSnapshotCommonConfiguration"><i>VolumeSnapshotCommonConfiguration</i></a>
+</td>
+<td>(Members of <code>VolumeSnapshotCommonConfiguration</code> are embedded into this type.)
+   <span class="text-muted">No description provided.</span></td>
+</tr>
+<tr><td><code>className</code><br/>
+<i>string</i>
+</td>
+<td>
+   <p>ClassName specifies the Snapshot Class to be used for PG_DATA PersistentVolumeClaim.
+It is the default class for the other types if no specific class is present</p>
+</td>
+</tr>
+<tr><td><code>walClassName</code><br/>
+<i>string</i>
+</td>
+<td>
+   <p>WalClassName specifies the VolumeSnapshotClass to be used to dynamically
+provision the PG_WAL Snapshot.</p>
+</td>
+</tr>
+<tr><td><code>tablespaceClassName</code><br/>
+<i>map[string]string</i>
+</td>
+<td>
+   <p>TablespaceClassName specifies the VolumeSnapshotClass to be used to dynamically
+provision the tablespace snapshots.
+Defaults to the PGDATA Snapshot Class, if set</p>
 </td>
 </tr>
 </tbody>

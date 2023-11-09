@@ -90,6 +90,7 @@ func NewCmd() *cobra.Command {
 				"",
 				string(apiv1.BackupMethodBarmanObjectStore),
 				string(apiv1.BackupMethodVolumeSnapshot),
+				string(apiv1.BackupMethodVolumeGroupSnapshot),
 			}
 			if !slices.Contains(allowedBackupMethods, backupMethod) {
 				return fmt.Errorf("backup-method: %s is not supported by the backup command", backupMethod)
@@ -156,8 +157,9 @@ func NewCmd() *cobra.Command {
 		"method",
 		"m",
 		"",
-		"If present, will override the backup method defined in backup resource, "+
-			"valid values are volumeSnapshot and barmanObjectStore.",
+		"The backup method to be used, valid values are volumeSnapshot, "+
+			"volumeGroupSnapshot and barmanObjectStore. "+
+			"Defaults to barmanObjectStore",
 	)
 
 	const optionalAcceptedValues = "Optional. Accepted values: true|false|\"\"."

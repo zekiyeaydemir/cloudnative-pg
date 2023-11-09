@@ -32,17 +32,5 @@ spec:
 
   # Backup properties
   backup:
-    volumeSnapshot:
-       className: csi-hostpath-snapclass
-    barmanObjectStore:
-      destinationPath: s3://backups/
-      endpointURL: http://minio:9000
-      s3Credentials:
-        accessKeyId:
-          name: minio
-          key: ACCESS_KEY_ID
-        secretAccessKey:
-          name: minio
-          key: ACCESS_SECRET_KEY
-      wal:
-        compression: gzip
+    volumeGroupSnapshot:
+       className: csi-hostpath-groupsnapclass

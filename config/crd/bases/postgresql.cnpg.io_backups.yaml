@@ -67,6 +67,7 @@ spec:
                 enum:
                 - barmanObjectStore
                 - volumeSnapshot
+                - volumeGroupSnapshot
                 type: string
               online:
                 description: Whether the default type of backup with volume snapshots

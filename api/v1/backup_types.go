@@ -66,6 +66,10 @@ const (
 type BackupMethod string
 
 const (
+	// BackupMethodVolumeGroupSnapshot means using the volume group snapshot
+	// Kubernetes feature
+	BackupMethodVolumeGroupSnapshot BackupMethod = "volumeGroupSnapshot"
+
 	// BackupMethodVolumeSnapshot means using the volume snapshot
 	// Kubernetes feature
 	BackupMethodVolumeSnapshot BackupMethod = "volumeSnapshot"
@@ -93,7 +97,7 @@ type BackupSpec struct {
 	// The backup method to be used, possible options are `barmanObjectStore`
 	// and `volumeSnapshot`. Defaults to: `barmanObjectStore`.
 	// +optional
-	// +kubebuilder:validation:Enum=barmanObjectStore;volumeSnapshot
+	// +kubebuilder:validation:Enum=barmanObjectStore;volumeSnapshot;volumeGroupSnapshot
 	// +kubebuilder:default:=barmanObjectStore
 	Method BackupMethod `json:"method,omitempty"`
 
@@ -462,21 +466,35 @@ func (backup *Backup) GetAssignedInstance(ctx context.Context, cli client.Client
 	return &previouslyElectedPod, nil
 }
 
-// GetVolumeSnapshotConfiguration overrides the  configuration value with the ones specified
+// GetVolumeSnapshotCommonConfiguration overrides the  configuration value with the ones specified
 // in the backup, if present.
-func (backup *Backup) GetVolumeSnapshotConfiguration(
-	clusterConfig VolumeSnapshotConfiguration,
-) VolumeSnapshotConfiguration {
-	config := clusterConfig
+func (backup *Backup) GetVolumeSnapshotCommonConfiguration(
+	cluster *Cluster,
+) (result *VolumeSnapshotCommonConfiguration) {
+	if cluster.Spec.Backup == nil {
+		return nil
+	}
+
+	switch backup.Spec.Method {
+	case BackupMethodVolumeSnapshot:
+		result = cluster.Spec.Backup.VolumeSnapshot.VolumeSnapshotCommonConfiguration.DeepCopy()
+
+	case BackupMethodVolumeGroupSnapshot:
+		result = cluster.Spec.Backup.VolumeGroupSnapshot.VolumeSnapshotCommonConfiguration.DeepCopy()
+
+	default:
+		return nil
+	}
+
 	if backup.Spec.Online != nil {
-		config.Online = backup.Spec.Online
+		result.Online = backup.Spec.Online
 	}
 
 	if backup.Spec.OnlineConfiguration != nil {
-		config.OnlineConfiguration = *backup.Spec.OnlineConfiguration
+		result.OnlineConfiguration = *backup.Spec.OnlineConfiguration
 	}
 
-	return config
+	return result
 }
 
 func init() {

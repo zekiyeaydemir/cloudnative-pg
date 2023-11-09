@@ -1242,6 +1242,75 @@ spec:
                     - primary
                     - prefer-standby
                     type: string
+                  volumeGroupSnapshot:
+                    description: VolumeSnapshot provides the configuration for the
+                      execution of volume group snapshot backups.
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: Annotations key-value pairs that will be added
+                          to .metadata.annotations snapshot resources.
+                        type: object
+                      className:
+                        description: ClassName specifies the VolumeGroupSnapshotClass
+                          to be used for PG_DATA PersistentVolumeClaim. It is the
+                          default class for the other types if no specific class is
+                          present
+                        type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels are key-value pairs that will be added
+                          to .metadata.labels snapshot resources.
+                        type: object
+                      online:
+                        default: true
+                        description: Whether the default type of backup with volume
+                          snapshots is online/hot (`true`, default) or offline/cold
+                          (`false`)
+                        type: boolean
+                      onlineConfiguration:
+                        default:
+                          immediateCheckpoint: false
+                          waitForArchive: true
+                        description: Configuration parameters to control the online/hot
+                          backup with volume snapshots
+                        properties:
+                          immediateCheckpoint:
+                            description: Control whether the I/O workload for the
+                              backup initial checkpoint will be limited, according
+                              to the `checkpoint_completion_target` setting on the
+                              PostgreSQL server. If set to true, an immediate checkpoint
+                              will be used, meaning PostgreSQL will complete the checkpoint
+                              as soon as possible. `false` by default.
+                            type: boolean
+                          waitForArchive:
+                            default: true
+                            description: If false, the function will return immediately
+                              after the backup is completed, without waiting for WAL
+                              to be archived. This behavior is only useful with backup
+                              software that independently monitors WAL archiving.
+                              Otherwise, WAL required to make the backup consistent
+                              might be missing and make the backup useless. By default,
+                              or when this parameter is true, pg_backup_stop will
+                              wait for WAL to be archived when archiving is enabled.
+                              On a standby, this means that it will wait only when
+                              archive_mode = always. If write activity on the primary
+                              is low, it may be useful to run pg_switch_wal on the
+                              primary in order to trigger an immediate segment switch.
+                            type: boolean
+                        type: object
+                      snapshotOwnerReference:
+                        default: none
+                        description: SnapshotOwnerReference indicates the type of
+                          owner reference the snapshot should have
+                        enum:
+                        - none
+                        - cluster
+                        - backup
+                        type: string
+                    type: object
                   volumeSnapshot:
                     description: VolumeSnapshot provides the configuration for the
                       execution of volume snapshot backups.
@@ -1312,13 +1381,13 @@ spec:
                       tablespaceClassName:
                         additionalProperties:
                           type: string
-                        description: TablespaceClassName specifies the Snapshot Class
-                          to be used for the tablespaces. defaults to the PGDATA Snapshot
-                          Class, if set
+                        description: TablespaceClassName specifies the VolumeSnapshotClass
+                          to be used to dynamically provision the tablespace snapshots.
+                          Defaults to the PGDATA Snapshot Class, if set
                         type: object
                       walClassName:
-                        description: WalClassName specifies the Snapshot Class to
-                          be used for the PG_WAL PersistentVolumeClaim.
+                        description: WalClassName specifies the VolumeSnapshotClass
+                          to be used to dynamically provision the PG_WAL Snapshot.
                         type: string
                     type: object
                 type: object

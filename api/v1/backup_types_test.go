@@ -415,11 +415,53 @@ var _ = Describe("IsCompletedVolumeSnapshot", func() {
 	})
 })
 
+var _ = Describe("GetVolumeSnapshotConfiguration for VolumeGroupSnapshots and VolumeSnapshots", func() {
+	cluster := &Cluster{
+		Spec: ClusterSpec{
+			Backup: &BackupConfiguration{
+				VolumeSnapshot: &VolumeSnapshotConfiguration{
+					VolumeSnapshotCommonConfiguration: VolumeSnapshotCommonConfiguration{
+						Online: ptr.To(false),
+					},
+				},
+				VolumeGroupSnapshot: &VolumeGroupSnapshotConfiguration{
+					VolumeSnapshotCommonConfiguration: VolumeSnapshotCommonConfiguration{
+						Online: ptr.To(true),
+					},
+				},
+			},
+		},
+	}
+
+	When("the backup spec requires volume group snapshot backups", func() {
+		backup := &Backup{
+			Spec: BackupSpec{
+				Method: BackupMethodVolumeGroupSnapshot,
+			},
+		}
+
+		It("returns the configuration for volume group snapshot backups", func() {
+			Expect(*backup.GetVolumeSnapshotCommonConfiguration(cluster).Online).To(BeTrue())
+		})
+	})
+	When("the backup spec requires volume snapshot backups", func() {
+		backup := &Backup{
+			Spec: BackupSpec{
+				Method: BackupMethodVolumeSnapshot,
+			},
+		}
+
+		It("returns the configuration for volume snapshot backups", func() {
+			Expect(*backup.GetVolumeSnapshotCommonConfiguration(cluster).Online).To(BeFalse())
+		})
+	})
+})
+
 var _ = Describe("GetVolumeSnapshotConfiguration", func() {
 	var (
 		backup          *Backup
-		clusterConfig   VolumeSnapshotConfiguration
-		resultConfig    VolumeSnapshotConfiguration
+		cluster         *Cluster
+		resultConfig    *VolumeSnapshotCommonConfiguration
 		onlineValue     = true
 		onlineConfigVal = OnlineConfiguration{
 			WaitForArchive:      ptr.To(true),
@@ -428,24 +470,31 @@ var _ = Describe("GetVolumeSnapshotConfiguration", func() {
 	)
 
 	BeforeEach(func() {
-		backup = &Backup{}
-		clusterConfig = VolumeSnapshotConfiguration{
-			Online:              nil,
-			OnlineConfiguration: OnlineConfiguration{},
+		backup = &Backup{
+			Spec: BackupSpec{
+				Method: BackupMethodVolumeSnapshot,
+			},
+		}
+		cluster = &Cluster{
+			Spec: ClusterSpec{
+				Backup: &BackupConfiguration{
+					VolumeSnapshot: &VolumeSnapshotConfiguration{},
+				},
+			},
 		}
 	})
 
 	JustBeforeEach(func() {
-		resultConfig = backup.GetVolumeSnapshotConfiguration(clusterConfig)
+		resultConfig = backup.GetVolumeSnapshotCommonConfiguration(cluster)
 	})
 
-	Context("when backup spec has no overrides", func() {
+	When("the backup spec has no overrides", func() {
 		It("should return clusterConfig as is", func() {
-			Expect(resultConfig).To(Equal(clusterConfig))
+			Expect(*resultConfig).To(Equal(cluster.Spec.Backup.VolumeSnapshot.VolumeSnapshotCommonConfiguration))
 		})
 	})
 
-	Context("when backup spec has Online override", func() {
+	When("the backup spec has Online override", func() {
 		BeforeEach(func() {
 			backup.Spec.Online = &onlineValue
 		})
@@ -455,7 +504,7 @@ var _ = Describe("GetVolumeSnapshotConfiguration", func() {
 		})
 	})
 
-	Context("when backup spec has OnlineConfiguration override", func() {
+	When("the backup spec has OnlineConfiguration override", func() {
 		BeforeEach(func() {
 			backup.Spec.OnlineConfiguration = &onlineConfigVal
 		})
@@ -465,7 +514,7 @@ var _ = Describe("GetVolumeSnapshotConfiguration", func() {
 		})
 	})
 
-	Context("when backup spec has both Online and OnlineConfiguration override", func() {
+	When("the when backup spec has both Online and OnlineConfiguration override", func() {
 		BeforeEach(func() {
 			backup.Spec.Online = &onlineValue
 			backup.Spec.OnlineConfiguration = &onlineConfigVal

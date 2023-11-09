@@ -134,25 +134,17 @@ const (
 	SnapshotOwnerReferenceCluster SnapshotOwnerReference = "cluster"
 )
 
-// VolumeSnapshotConfiguration represents the configuration for the execution of snapshot backups.
-type VolumeSnapshotConfiguration struct {
+// VolumeSnapshotCommonConfiguration represent the configuration attributes that are common
+// to every volume snapshots based backup
+type VolumeSnapshotCommonConfiguration struct {
 	// Labels are key-value pairs that will be added to .metadata.labels snapshot resources.
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
+
 	// Annotations key-value pairs that will be added to .metadata.annotations snapshot resources.
 	// +optional
 	Annotations map[string]string `json:"annotations,omitempty"`
-	// ClassName specifies the Snapshot Class to be used for PG_DATA PersistentVolumeClaim.
-	// It is the default class for the other types if no specific class is present
-	// +optional
-	ClassName string `json:"className,omitempty"`
-	// WalClassName specifies the Snapshot Class to be used for the PG_WAL PersistentVolumeClaim.
-	// +optional
-	WalClassName string `json:"walClassName,omitempty"`
-	// TablespaceClassName specifies the Snapshot Class to be used for the tablespaces.
-	// defaults to the PGDATA Snapshot Class, if set
-	// +optional
-	TablespaceClassName map[string]string `json:"tablespaceClassName,omitempty"`
+
 	// SnapshotOwnerReference indicates the type of owner reference the snapshot should have
 	// +optional
 	// +kubebuilder:validation:Enum:=none;cluster;backup
@@ -173,12 +165,43 @@ type VolumeSnapshotConfiguration struct {
 
 // GetOnline tells whether this volume snapshot configuration allows
 // online backups
-func (configuration *VolumeSnapshotConfiguration) GetOnline() bool {
+func (configuration *VolumeSnapshotCommonConfiguration) GetOnline() bool {
 	if configuration.Online == nil {
 		return true
 	}
 
 	return *configuration.Online
+}
+
+// VolumeSnapshotConfiguration represents the configuration for the execution of snapshot backups.
+type VolumeSnapshotConfiguration struct {
+	VolumeSnapshotCommonConfiguration `json:",inline"`
+
+	// ClassName specifies the Snapshot Class to be used for PG_DATA PersistentVolumeClaim.
+	// It is the default class for the other types if no specific class is present
+	// +optional
+	ClassName string `json:"className,omitempty"`
+
+	// WalClassName specifies the VolumeSnapshotClass to be used to dynamically
+	// provision the PG_WAL Snapshot.
+	// +optional
+	WalClassName string `json:"walClassName,omitempty"`
+
+	// TablespaceClassName specifies the VolumeSnapshotClass to be used to dynamically
+	// provision the tablespace snapshots.
+	// Defaults to the PGDATA Snapshot Class, if set
+	// +optional
+	TablespaceClassName map[string]string `json:"tablespaceClassName,omitempty"`
+}
+
+// VolumeGroupSnapshotConfiguration represents the configuration for the execution of group snapshot backups.
+type VolumeGroupSnapshotConfiguration struct {
+	VolumeSnapshotCommonConfiguration `json:",inline"`
+
+	// ClassName specifies the VolumeGroupSnapshotClass to be used for PG_DATA PersistentVolumeClaim.
+	// It is the default class for the other types if no specific class is present
+	// +optional
+	ClassName string `json:"className,omitempty"`
 }
 
 // OnlineConfiguration contains the configuration parameters for the online volume snapshot
@@ -1881,6 +1904,11 @@ type BackupConfiguration struct {
 	// VolumeSnapshot provides the configuration for the execution of volume snapshot backups.
 	// +optional
 	VolumeSnapshot *VolumeSnapshotConfiguration `json:"volumeSnapshot,omitempty"`
+
+	// VolumeSnapshot provides the configuration for the execution of volume group snapshot
+	// backups.
+	// +optional
+	VolumeGroupSnapshot *VolumeGroupSnapshotConfiguration `json:"volumeGroupSnapshot,omitempty"`
 
 	// The configuration for the barman-cloud tool suite
 	// +optional

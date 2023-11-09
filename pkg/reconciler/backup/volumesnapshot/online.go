@@ -99,7 +99,7 @@ func (o *onlineExecutor) prepare(
 	backup *apiv1.Backup,
 	targetPod *corev1.Pod,
 ) (*ctrl.Result, error) {
-	volumeSnapshotConfig := backup.GetVolumeSnapshotConfiguration(*cluster.Spec.Backup.VolumeSnapshot)
+	volumeSnapshotConfig := backup.GetVolumeSnapshotCommonConfiguration(cluster)
 
 	// Handle hot snapshots
 	body, err := o.backupClient.StatusWithErrors(ctx, targetPod.Status.PodIP)

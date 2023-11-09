@@ -75,8 +75,10 @@ var _ = Describe("Volumesnapshot reconciler", func() {
 			Spec: apiv1.ClusterSpec{
 				Backup: &apiv1.BackupConfiguration{
 					VolumeSnapshot: &apiv1.VolumeSnapshotConfiguration{
+						VolumeSnapshotCommonConfiguration: apiv1.VolumeSnapshotCommonConfiguration{
+							Online: ptr.To(false),
+						},
 						ClassName: "csi-hostpath-snapclass",
-						Online:    ptr.To(false),
 					},
 				},
 			},
@@ -114,6 +116,9 @@ var _ = Describe("Volumesnapshot reconciler", func() {
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: namespace,
 				Name:      backupName,
+			},
+			Spec: apiv1.BackupSpec{
+				Method: apiv1.BackupMethodVolumeSnapshot,
 			},
 			Status: apiv1.BackupStatus{
 				StartedAt: ptr.To(startedAt),
